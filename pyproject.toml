@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "fastapi-sqlalchemy2-0-async"
+version = "0.1.0"
+description = ""
+authors = ["Ahmed Nafies <ahmed.nafies@gmail.com>"]
+readme = "README.md"
+packages = [{include = "fastapi_sqlalchemy2"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.101.1"
+sqlalchemy = "^2.0.20"
+alembic = "^1.11.3"
+uvicorn = "^0.23.2"
+asyncpg = "^0.28.0"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.7.0"
+flake8 = "^6.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
