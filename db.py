@@ -14,40 +14,38 @@ Base = declarative_base()
 
 class Database:
     def __init__(self):
-        self.__session = None
-        self.__engine = None
+        self.session = None
+        self.engine = None
 
     def __getattr__(self, name):
-        return getattr(self._session, name)
+        return getattr(self.session, name)
 
     def init(self, db_config):
-        self.__engine = create_async_engine(
+        self.engine = create_async_engine(
             config.DB_CONFIG,
             pool_pre_ping=True,
             echo=True,
         )
 
-        self.__session = async_sessionmaker(
-            bind=self.__engine,
+        self.session = async_sessionmaker(
+            bind=self.engine,
+            autocommit=False,
             autoflush=False,
             future=True,
         )
 
-    def create_all(self):
-        Base.metadata.create_all(self.__engine)
-
-    def drop_all(self):
-        Base.metadata.drop_all(self.__engine)
-
-    async def get_session(self) -> AsyncIterator[async_sessionmaker]:
-        session = self._session()
-        try:
-            yield session
-        except SQLAlchemyError as e:
-            logger.exception(e)
-            await session.rollback()
-        finally:
-            await session.close()
+    async def create_all(self):
+        async with self.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
 
 db = Database()
+
+
+async def get_db():
+    session = db.session()
+    try:
+        yield session
+    except SQLAlchemyError as e:
+        logger.exception(e)
+        await session.rollback()
