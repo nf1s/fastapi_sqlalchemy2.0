@@ -13,10 +13,6 @@ def init_app():
         version="1",
     )
 
-    @app.on_event("startup")
-    async def startup():
-        await db.create_all()
-
     from views import api
 
     app.include_router(

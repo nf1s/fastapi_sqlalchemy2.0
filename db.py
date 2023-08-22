@@ -17,9 +17,6 @@ class Database:
         self.session = None
         self.engine = None
 
-    def __getattr__(self, name):
-        return getattr(self.session, name)
-
     def init(self, db_config):
         self.engine = create_async_engine(
             config.DB_CONFIG,
@@ -29,10 +26,6 @@ class Database:
             bind=self.engine,
             autocommit=False,
         )
-
-    async def create_all(self):
-        async with self.engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
 
     async def get_db(self):
         async with db.session() as session:
