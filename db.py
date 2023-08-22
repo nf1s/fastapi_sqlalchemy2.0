@@ -34,10 +34,9 @@ class Database:
         async with self.engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
+    async def get_db(self):
+        async with db.session() as session:
+            yield session
+
 
 db = Database()
-
-
-async def get_db():
-    async with db.session() as session:
-        yield session

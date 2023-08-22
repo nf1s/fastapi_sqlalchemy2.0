@@ -22,7 +22,7 @@ class User(Base):
         )
 
     @classmethod
-    async def create(cls, db, **kwargs):
+    async def create(cls, db, **kwargs) -> "User":
         query = (
             sql.insert(cls)
             .values(id=str(uuid4()), **kwargs)
@@ -33,7 +33,7 @@ class User(Base):
         return users.first()
 
     @classmethod
-    async def update(cls, db, id, **kwargs):
+    async def update(cls, db, id, **kwargs) -> "User":
         query = (
             sql.update(cls)
             .where(cls.id == id)
@@ -46,21 +46,21 @@ class User(Base):
         return users.first()
 
     @classmethod
-    async def get(cls, db, id):
+    async def get(cls, db, id) -> "User":
         query = sql.select(cls).where(cls.id == id)
         users = await db.execute(query)
         (user,) = users.first()
         return user
 
     @classmethod
-    async def get_all(cls, db):
+    async def get_all(cls, db) -> list["User"]:
         query = sql.select(cls)
         users = await db.execute(query)
         users = users.scalars().all()
         return users
 
     @classmethod
-    async def delete(cls, db, id):
+    async def delete(cls, db, id) -> bool:
         query = (
             sql.delete(cls)
             .where(cls.id == id)
