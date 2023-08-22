@@ -1,7 +1,5 @@
 import logging
-from typing import AsyncIterator
 
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
@@ -14,21 +12,24 @@ Base = declarative_base()
 
 class Database:
     def __init__(self):
-        self.session = None
-        self.engine = None
+        self.__session = None
+        self.__engine = None
 
-    def init(self, db_config):
-        self.engine = create_async_engine(
+    def connect(self, db_config):
+        self.__engine = create_async_engine(
             config.DB_CONFIG,
         )
 
-        self.session = async_sessionmaker(
-            bind=self.engine,
+        self.__session = async_sessionmaker(
+            bind=self.__engine,
             autocommit=False,
         )
 
+    async def disconnect(self):
+        await self.__engine.dispose()
+
     async def get_db(self):
-        async with db.session() as session:
+        async with db.__session() as session:
             yield session
 
 
