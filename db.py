@@ -23,15 +23,11 @@ class Database:
     def init(self, db_config):
         self.engine = create_async_engine(
             config.DB_CONFIG,
-            pool_pre_ping=True,
-            echo=True,
         )
 
         self.session = async_sessionmaker(
             bind=self.engine,
             autocommit=False,
-            autoflush=False,
-            future=True,
         )
 
     async def create_all(self):
@@ -43,9 +39,5 @@ db = Database()
 
 
 async def get_db():
-    session = db.session()
-    try:
+    async with db.session() as session:
         yield session
-    except SQLAlchemyError as e:
-        logger.exception(e)
-        await session.rollback()

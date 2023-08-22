@@ -2,9 +2,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy import Column, DateTime, String
-from sqlalchemy import delete as sqlalchemy_delete
-from sqlalchemy import update as sqlalchemy_update
-from sqlalchemy.future import select
+from sqlalchemy.sql import expression as sql
 
 from db import Base
 
@@ -25,53 +23,45 @@ class User(Base):
 
     @classmethod
     async def create(cls, db, **kwargs):
-        user = cls(id=str(uuid4()), **kwargs)
-        try:
-            await db.commit()
-        except Exception:
-            await db.rollback()
-            raise
-
-        return user
+        query = (
+            sql.insert(cls)
+            .values(id=str(uuid4()), **kwargs)
+            .returning(cls.id, cls.full_name)
+        )
+        results = await db.execute(query)
+        await db.commit()
+        return results.first()
 
     @classmethod
     async def update(cls, db, id, **kwargs):
         query = (
-            sqlalchemy_update(cls)
+            sql.update(cls)
             .where(cls.id == id)
             .values(**kwargs)
             .execution_options(synchronize_session="fetch")
+            .returning(cls.id, cls.full_name)
         )
-
-        await db.execute(query)
-        try:
-            await db.commit()
-        except Exception:
-            await db.rollback()
-            raise
-        return await cls.get(id)
+        results = await db.execute(query)
+        await db.commit()
+        return results.first()
 
     @classmethod
     async def get(cls, db, id):
-        query = select(cls).where(cls.id == id)
+        query = sql.select(cls).where(cls.id == id)
         users = await db.execute(query)
         (user,) = users.first()
         return user
 
     @classmethod
     async def get_all(cls, db):
-        query = select(cls)
+        query = sql.select(cls)
         users = await db.execute(query)
         users = users.scalars().all()
         return users
 
     @classmethod
     async def delete(cls, db, id):
-        query = sqlalchemy_delete(cls).where(cls.id == id)
+        query = sql.delete(cls).where(cls.id == id)
         await db.execute(query)
-        try:
-            await db.commit()
-        except Exception:
-            await db.rollback()
-            raise
+        await db.commit()
         return True
