@@ -28,9 +28,9 @@ class User(Base):
             .values(id=str(uuid4()), **kwargs)
             .returning(cls.id, cls.full_name)
         )
-        results = await db.execute(query)
+        users = await db.execute(query)
         await db.commit()
-        return results.first()
+        return users.first()
 
     @classmethod
     async def update(cls, db, id, **kwargs):
@@ -41,9 +41,9 @@ class User(Base):
             .execution_options(synchronize_session="fetch")
             .returning(cls.id, cls.full_name)
         )
-        results = await db.execute(query)
+        users = await db.execute(query)
         await db.commit()
-        return results.first()
+        return users.first()
 
     @classmethod
     async def get(cls, db, id):
@@ -61,7 +61,14 @@ class User(Base):
 
     @classmethod
     async def delete(cls, db, id):
-        query = sql.delete(cls).where(cls.id == id)
+        query = (
+            sql.delete(cls)
+            .where(cls.id == id)
+            .returning(
+                cls.id,
+                cls.full_name,
+            )
+        )
         await db.execute(query)
         await db.commit()
         return True
